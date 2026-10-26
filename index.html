@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="html-tag">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة المجد للقدرات - الرئيسية</title>
+    <!-- ربط ملف التنسيق الخارجي للرئيسية -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- حاوية الـ Canvas الخلفية للرسم التفاعلي للأرقام والمعادلات -->
+    <canvas id="mathCanvas"></canvas>
+
+    <!-- رسالة الترحيب المنبثقة -->
+    <div class="welcome-toast" id="welcomeToast" data-ar="مرحباً بك في منصة المجد للقدرات 🎓" data-en="Welcome to Al-Majd Qudurat Platform 🎓">
+        مرحباً بك في منصة المجد للقدرات 🎓
+    </div>
+
+    <!-- شاشة التعتيم الخلفية للقائمة والنوافذ المنبثقة -->
+    <div class="overlay" id="overlay" onclick="closeAllOverlays()"></div>
+
+    <!-- رأس الصفحة -->
+    <header>
+        <!-- شعار وبنر المنصة في أقصى اليمين (قابل للنقر للرئيسية) -->
+        <div class="logo-container" onclick="window.location.href='/'" style="cursor:pointer;" title="الصفحة الرئيسية">
+            <img src="img/logo.png" alt="شعار المجد للقدرات" class="main-logo">
+            <span class="brand-title-header">منصة المجد 🏆</span>
+        </div>
+
+        <!-- أزرار التحكم مجمعة بجوار بعضها في أقصى اليسار -->
+        <div class="header-controls">
+            <!-- حاوية الأيقونة الذكية التفاعلية مع تأثيرات الماوس التلقائية -->
+            <div class="tooltip-wrapper" id="authTooltipWrapper">
+                <button class="login-trigger-btn" onclick="handleAuthIconClick()" id="loginTriggerBtn">👤</button>
+                <span class="tooltip-text" id="authTooltipText">تسجيل الدخول</span>
+            </div>
+
+            <!-- زر تغيير اللغة -->
+            <button class="lang-btn" onclick="toggleLanguage()" id="langBtn" title="Change Language">🌐 EN</button>
+            <!-- زر فتح القائمة الجانبية (التنقل) -->
+            <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+    </header>
+
+    <!-- نافذة الحسابات المنبثقة التفاعلية -->
+    <div class="login-modal" id="loginModal">
+        <button class="modal-close-btn" onclick="toggleLoginModal()">✕</button>
+        
+        <!-- ================= واجهة تسجيل الدخول ================= -->
+        <div id="login-view">
+            <h3 data-ar="تسجيل دخول الطلاب" data-en="Student Login">تسجيل دخول الطلاب</h3>
+
+            <form onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <label data-ar="البريد الإلكتروني:" data-en="Email Address:">البريد الإلكتروني:</label>
+                    <input type="email" id="loginEmail" required placeholder="example@email.com">
+                </div>
+                <div class="input-group">
+                    <label data-ar="كلمة المرور:" data-en="Password:">كلمة المرور:</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="submit-login-btn" data-ar="دخول للمنصة" data-en="Login to Platform">دخول للمنصة</button>
+            </form>
+            <div class="toggle-auth-links">
+                <span data-ar="ليس لديك حساب؟" data-en="Don't have an account?">ليس لديك حساب؟</span>
+                <button onclick="switchAuthView('register')" data-ar="إنشاء حساب جديد" data-en="Create new account">إنشاء حساب جديد</button>
+            </div>
+        </div>
+
+        <!-- ================= واجهة إنشاء حساب جديد ================= -->
+        <div id="register-view" style="display: none;">
+            <h3 data-ar="إنشاء حساب طالب جديد" data-en="Create New Student Account">إنشاء حساب طالب جديد</h3>
+
+            <form onsubmit="handleRegister(event)">
+                <div class="input-group">
+                    <label data-ar="الاسم الكامل:" data-en="Full Name:">الاسم الكامل:</label>
+                    <input type="text" id="regName" required placeholder="Hassan Ahmed">
+                </div>
+                <div class="input-group">
+                    <label data-ar="البريد الإلكتروني:" data-en="Email Address:">البريد الإلكتروني:</label>
+                    <input type="email" id="regEmail" required placeholder="example@email.com">
+                </div>
+                <div class="input-group">
+                    <label data-ar="كلمة المرور:" data-en="Password:">كلمة المرور:</label>
+                    <input type="password" id="regPassword" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="submit-login-btn" data-ar="تأكيد التسجيل والبدء" data-en="Register & Start">تأكيد التسجيل والبدء</button>
+            </form>
+            <div class="toggle-auth-links">
+                <span data-ar="لديك حساب بالفعل؟" data-en="Already have an account?">لديك حساب بالفعل؟</span>
+                <button onclick="switchAuthView('login')" data-ar="تسجيل الدخول" data-en="Sign In">تسجيل الدخول</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- القائمة الجانبية -->
+    <nav class="sidebar" id="sidebar">
+        <button class="close-btn" onclick="toggleSidebar()" id="closeSidebarBtn" data-ar="✕ إغلاق" data-en="✕ Close">✕ إغلاق</button>
+        <ul id="sidebar-links">
+            <li><a href="#" data-ar="الصفحة الرئيسية" data-en="Home">الصفحة الرئيسية</a></li>
+            <li><a href="#coursesSection" onclick="toggleSidebar()" data-ar="الدورات المتاحة" data-en="Courses">الدورات المتاحة 📚</a></li>
+            <li><a href="./dashboard.html" onclick="handleDashboardNav(event)" data-ar="لوحة تحكم الطالب" data-en="Student Dashboard">لوحة تحكم الطالب</a></li>
+            <li><a href="#" data-ar="تواصل معنا" data-en="Contact Us">تواصل معنا</a></li>
+        </ul>
+    </nav>
+
+    <!-- الحاوية الرئيسية للمحتويات العائمة الشفافة فوق معادلات الماوس -->
+    <main class="main-container">
+        <section class="features-transparent-zone">
+            <div class="circle-center">100%</div>
+            <div class="orbit-ring">
+                <div class="feature-card card-1"><h4>الفهم العميق</h4><span>أساس النجاح</span></div>
+                <div class="feature-card card-2"><h4>دورة المحوسب</h4><span>تدريب شامل</span></div>
+                <div class="feature-card card-3"><h4>نسخ لصق</h4><span>مطابقة عالية</span></div>
+                <div class="feature-card card-4"><h4>أساليب سريعة</h4><span>استراتيجيات الحل</span></div>
+            </div>
+        </section>
+
+        <section class="profile-transparent-zone">
+            <img src="img/teacher.jpg" alt="أستاذ حسن أبو الحمد" class="teacher-avatar">
+            <h2>أ/ حسن أبو الحمد</h2>
+            <p>خبير ومحاضر دورات القدرات (الكمي واللفظي). نسعى معاً في منصة المجد لتمكين الطلاب وتدريبهم بأحدث الاستراتيجيات للوصول إلى نسبة 100% بإذن الله.</p>
+        </section>
+    </main>
+
+    <!-- ==================== قسم الدورات التدريبية المتاحة ==================== -->
+    <section class="home-courses-section" id="coursesSection">
+        <div class="section-title-wrap">
+            <span class="section-tag">🎯 دوراتنا المعتمدة</span>
+            <h2 class="section-title">الدورات التدريبية المتاحة 📚</h2>
+            <p class="section-subtitle">اختر دورتك التدريبية الآن وابدأ رحلتك لتحقيق أعلى الدرجات مع نخبة المعلمين</p>
+        </div>
+        <div class="home-courses-grid" id="homeCoursesGrid">
+            <div class="course-loading-spinner" style="text-align:center; padding:30px; color:#d4af37;">جاري جلب الدورات... ⏳</div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>

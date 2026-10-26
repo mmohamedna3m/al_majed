@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة المجد - لوحة التحكم</title>
+    <link rel="stylesheet" href="dashboard-style.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="dash-header">
+        <div class="brand" onclick="window.location.href='/'" style="cursor:pointer;" title="العودة للصفحة الرئيسية">
+            <a href="/" style="text-decoration:none; color:inherit;">🏆 منصة المجد للقدرات</a>
+        </div>
+        <div class="header-right">
+            <span id="headerUserName" class="header-username">...</span>
+            <a href="index.html" class="btn-home">🏠 الرئيسية</a>
+            <button class="btn-logout" onclick="handleLogout()">تسجيل الخروج 🚪</button>
+        </div>
+    </header>
+
+    <div class="dash-container">
+
+        <!-- Sidebar: معلومات الطالب -->
+        <aside class="profile-sidebar">
+            <div class="avatar-section">
+                <div class="avatar-circle" id="avatarLetter">م</div>
+                <div id="profileName" class="profile-name">...</div>
+            </div>
+
+            <!-- نموذج تعديل البيانات -->
+            <div class="edit-profile-card">
+                <h4>✏️ تعديل بياناتي</h4>
+                <form id="editProfileForm">
+                    <label>الاسم الكامل:</label>
+                    <input type="text" id="editName" name="name" placeholder="أدخل اسمك الكامل">
+
+                    <label>البريد الإلكتروني:</label>
+                    <input type="email" id="editEmail" name="email" placeholder="example@email.com">
+
+                    <label>رقم الهاتف:</label>
+                    <input type="tel" id="editPhone" name="phone" placeholder="05xxxxxxxx">
+
+                    <button type="submit" class="btn-save">💾 حفظ التغييرات</button>
+                </form>
+                <div id="editMsg" class="edit-msg"></div>
+            </div>
+
+            <div class="profile-info-card">
+                <div class="info-row">
+                    <span class="info-label">📧 الإيميل:</span>
+                    <span id="profileEmail" class="info-value">...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📱 الهاتف:</span>
+                    <span id="profilePhone" class="info-value">غير محدد</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📅 تاريخ الانضمام:</span>
+                    <span id="profileJoinDate" class="info-value">...</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main: الدورات والنتائج -->
+        <main class="dash-main">
+
+            <!-- إحصائيات سريعة -->
+            <div class="quick-stats">
+                <div class="q-stat">
+                    <div class="q-num" id="coursesCount">0</div>
+                    <div class="q-label">الدورات المشتركة</div>
+                </div>
+                <div class="q-stat">
+                    <div class="q-num" id="examsCount">0</div>
+                    <div class="q-label">الاختبارات المؤداة</div>
+                </div>
+            </div>
+
+            <!-- الدورات المشتركة -->
+            <section class="courses-section">
+                <h2>📚 دوراتي</h2>
+                <div class="courses-grid" id="myCoursesGrid">
+                    <div class="loading-state">⏳ جاري تحميل الدورات...</div>
+                </div>
+            </section>
+
+            <!-- نتائج الاختبارات -->
+            <section class="results-section">
+                <h2>📊 نتائج اختباراتي</h2>
+                <div class="table-wrapper">
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>الاختبار</th>
+                                <th>الدرجة</th>
+                                <th>المجموع</th>
+                                <th>النسبة</th>
+                                <th>الحالة</th>
+                                <th>التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsTableBody">
+                            <tr><td colspan="6" class="loading-cell">⏳ جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="dashboard-script.js"></script>
+</body>
+</html>

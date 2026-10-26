@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بناء الدروس - منصة المجد</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ==================== SIDEBAR ==================== -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <a href="/" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
+            <span>🏆</span> منصة المجد
+        </a>
+    </div>
+    <nav>
+        <a href="index.html"><span class="nav-icon">📊</span> لوحة التحكم</a>
+        <a href="sections.html"><span class="nav-icon">📂</span> الأقسام</a>
+        <a href="courses.html"><span class="nav-icon">📚</span> الدورات</a>
+        <a href="lessons.html" class="active"><span class="nav-icon">🎬</span> الدروس</a>
+        <a href="students.html"><span class="nav-icon">👥</span> الطلاب</a>
+        <a href="exams.html"><span class="nav-icon">📝</span> الاختبارات</a>
+    </nav>
+    <div class="sidebar-footer">
+        <button onclick="handleLogout()">🚪 تسجيل الخروج</button>
+    </div>
+</aside>
+
+<!-- ==================== MAIN ==================== -->
+<main class="main-content">
+    <div class="page-header">
+        <h1>🎬 بناء الدروس</h1>
+        <div class="admin-info" id="adminInfo"></div>
+    </div>
+
+    <div class="page-body">
+
+        <!-- اختيار الدورة -->
+        <div class="card" style="padding:16px;">
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <label style="color:var(--gold); font-weight:bold; white-space:nowrap;">📚 اختر الدورة:</label>
+                <select class="form-control" id="courseSelect" onchange="onCourseChange()" style="flex:1; max-width:400px;">
+                    <option value="">— اختر دورة لإدارة دروسها —</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Layout: نموذج + قائمة -->
+        <div class="builder-layout" id="builderLayout" style="display:none;">
+
+            <!-- الجانب الأيمن: نموذج الدرس -->
+            <div class="builder-panel">
+                <h3 id="lessonFormTitle">📝 درس جديد</h3>
+
+                <form id="lessonForm" onsubmit="submitLesson(event)">
+                    <input type="hidden" id="lessonId">
+
+                    <div class="form-group">
+                        <label>عنوان الدرس *</label>
+                        <input class="form-control" id="lessonTitle" placeholder="مثال: المعادلات التربيعية" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>🎥 رابط الفيديو (يوتيوب)</label>
+                        <input class="form-control" id="lessonVideoUrl"
+                            placeholder="https://www.youtube.com/watch?v=...">
+                        <div id="videoPreview" style="margin-top:10px;"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>📝 المحتوى النصي للدرس</label>
+                        <textarea class="form-control" id="lessonContent" rows="5"
+                            placeholder="اكتب وصف الدرس والملاحظات والتوضيحات هنا..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>📎 رفع ملف PDF</label>
+                        <div class="file-input-wrapper">
+                            <div class="file-input-label">
+                                <span>📁</span> اختر ملف PDF...
+                            </div>
+                            <input type="file" id="lessonPdf" accept=".pdf" onchange="onPdfChange(this)">
+                        </div>
+                        <div id="currentPdf"></div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary" id="lessonSubmitBtn">
+                            💾 حفظ الدرس
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="newLessonBtn" onclick="resetLessonForm()">
+                            ➕ درس جديد
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- الجانب الأيسر: قائمة الدروس -->
+            <div class="builder-list">
+                <h3>
+                    📋 دروس الدورة
+                    <span class="badge badge-student" id="lessonsCount" style="margin-right:auto;">0</span>
+                </h3>
+                <div id="lessonsListContainer">
+                    <p class="no-data">اختر دورة أولاً</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- رسالة اختيار الدورة -->
+        <div id="noCoursePlaceholder" class="card" style="text-align:center; padding:60px;">
+            <div style="font-size:3rem; margin-bottom:16px;">🎬</div>
+            <p style="color:var(--text-secondary); font-size:1rem;">
+                اختر دورة من القائمة أعلاه لإدارة دروسها
+            </p>
+        </div>
+
+    </div>
+</main>
+
+<script src="admin.js"></script>
+<script>
+'use strict';
+
+let selectedCourseId = null;
+
+/* ---- تحميل الدورات في الـ dropdown ---- */
+async function loadCoursesList() {
+    const sel = document.getElementById('courseSelect');
+    try {
+        const courses = await apiRequest('/api/courses');
+        courses.forEach(c => {
+            sel.add(new Option(`${c.section?.title ? c.section.title + ' ← ' : ''}${c.title}`, c.id));
+        });
+    } catch (err) {
+        showAlert('تعذر تحميل قائمة الدورات', 'error');
+    }
+}
+
+/* ---- عند اختيار دورة ---- */
+function onCourseChange() {
+    const val = document.getElementById('courseSelect').value;
+    if (!val) {
+        document.getElementById('builderLayout').style.display = 'none';
+        document.getElementById('noCoursePlaceholder').style.display = '';
+        selectedCourseId = null;
+        return;
+    }
+    selectedCourseId = val;
+    document.getElementById('builderLayout').style.display = 'grid';
+    document.getElementById('noCoursePlaceholder').style.display = 'none';
+    resetLessonForm();
+    loadLessons(val);
+}
+
+/* ---- تحميل دروس الدورة ---- */
+async function loadLessons(courseId) {
+    const container = document.getElementById('lessonsListContainer');
+    const countBadge = document.getElementById('lessonsCount');
+    container.innerHTML = '<div class="loading-center"><div class="spinner"></div></div>';
+    try {
+        const lessons = await apiRequest(`/api/courses/${courseId}/lessons`);
+        countBadge.textContent = (lessons?.length ?? 0) + ' درس';
+        if (!lessons || lessons.length === 0) {
+            container.innerHTML = '<p class="no-data">لا توجد دروس بعد. أضف أول درس!</p>';
+            return;
+        }
+        container.innerHTML = lessons.map((l, idx) => `
+            <div class="list-item" id="lesson-item-${l.id}">
+                <div class="list-item-info">
+                    <div class="list-item-title">
+                        <span style="color:var(--text-secondary); font-size:0.8rem;">${idx + 1}.</span>
+                        ${escapeHtml(l.title)}
+                    </div>
+                    <div class="list-item-sub">
+                        ${l.video_url ? '🎥 فيديو  ' : ''}${l.pdf_url ? '📎 PDF  ' : ''}${l.content ? '📝 محتوى' : ''}
+                    </div>
+                </div>
+                <div class="list-item-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="editLesson(${JSON.stringify(l).replace(/"/g,'&quot;')})">
+                        ✏️
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteLesson(${l.id}, '${escapeHtml(l.title).replace(/'/g,"\\'")}')">
+                        🗑️
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        container.innerHTML = `<p class="no-data">❌ ${escapeHtml(err.message)}</p>`;
+        showAlert(err.message, 'error');
+    }
+}
+
+/* ---- تحميل بيانات الدرس في النموذج ---- */
+function editLesson(lesson) {
+    document.getElementById('lessonFormTitle').textContent = '✏️ تعديل الدرس';
+    document.getElementById('lessonSubmitBtn').textContent = '💾 حفظ التعديلات';
+    document.getElementById('lessonId').value       = lesson.id;
+    document.getElementById('lessonTitle').value    = lesson.title || '';
+    document.getElementById('lessonVideoUrl').value = lesson.video_url || '';
+    document.getElementById('lessonContent').value  = lesson.content || '';
+
+    // عرض PDF الحالي
+    const pdfDiv = document.getElementById('currentPdf');
+    if (lesson.pdf_url) {
+        pdfDiv.innerHTML = `
+            <div class="current-pdf">
+                📎 <a href="${escapeHtml(lesson.pdf_url)}" target="_blank" style="color:var(--cyan);">
+                    الملف الحالي: ${escapeHtml(lesson.pdf_url.split('/').pop())}
+                </a>
+            </div>`;
+    } else {
+        pdfDiv.innerHTML = '';
+    }
+
+    // معاينة الفيديو
+    previewVideo(lesson.video_url);
+
+    // التمرير للنموذج
+    document.querySelector('.builder-panel').scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ---- إعادة ضبط النموذج ---- */
+function resetLessonForm() {
+    document.getElementById('lessonFormTitle').textContent = '📝 درس جديد';
+    document.getElementById('lessonSubmitBtn').textContent = '💾 حفظ الدرس';
+    document.getElementById('lessonId').value       = '';
+    document.getElementById('lessonTitle').value    = '';
+    document.getElementById('lessonVideoUrl').value = '';
+    document.getElementById('lessonContent').value  = '';
+    document.getElementById('lessonPdf').value      = '';
+    document.getElementById('currentPdf').innerHTML = '';
+    document.getElementById('videoPreview').innerHTML = '';
+}
+
+/* ---- معاينة فيديو يوتيوب ---- */
+document.getElementById('lessonVideoUrl')?.addEventListener('input', function() {
+    previewVideo(this.value);
+});
+
+function previewVideo(url) {
+    const embedUrl = toYoutubeEmbed(url);
+    const container = document.getElementById('videoPreview');
+    if (embedUrl) {
+        container.innerHTML = `
+            <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px; border:1px solid var(--border);">
+                <iframe src="${escapeHtml(embedUrl)}"
+                    style="position:absolute; top:0; left:0; width:100%; height:100%;"
+                    frameborder="0" allowfullscreen></iframe>
+            </div>`;
+    } else {
+        container.innerHTML = '';
+    }
+}
+
+/* ---- عند اختيار PDF ---- */
+function onPdfChange(input) {
+    const div = document.getElementById('currentPdf');
+    if (input.files && input.files[0]) {
+        div.innerHTML = `<div class="current-pdf">📎 تم اختيار: ${escapeHtml(input.files[0].name)}</div>`;
+    }
+}
+
+/* ---- إرسال نموذج الدرس ---- */
+async function submitLesson(event) {
+    event.preventDefault();
+    const id = document.getElementById('lessonId').value;
+    const btn = document.getElementById('lessonSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ جاري الحفظ...';
+
+    try {
+        const fd = new FormData();
+        fd.append('course_id', selectedCourseId);
+        fd.append('title',     document.getElementById('lessonTitle').value.trim());
+        fd.append('video_url', document.getElementById('lessonVideoUrl').value.trim());
+        fd.append('content',   document.getElementById('lessonContent').value.trim());
+
+        const pdfFile = document.getElementById('lessonPdf').files[0];
+        if (pdfFile) fd.append('pdf', pdfFile);
+
+        await apiRequest(id ? `/api/lessons/${id}` : '/api/lessons', {
+            method: id ? 'PUT' : 'POST',
+            body: fd,
+        });
+
+        showAlert(id ? 'تم تعديل الدرس بنجاح ✅' : 'تم إضافة الدرس بنجاح ✅', 'success');
+        resetLessonForm();
+        loadLessons(selectedCourseId);
+    } catch (err) {
+        showAlert(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 حفظ الدرس';
+    }
+}
+
+/* ---- حذف درس ---- */
+async function deleteLesson(id, title) {
+    if (!confirmDelete(`هل تريد حذف الدرس "${title}"؟`)) return;
+    try {
+        await apiRequest(`/api/lessons/${id}`, { method: 'DELETE' });
+        showAlert('تم حذف الدرس بنجاح', 'success');
+        loadLessons(selectedCourseId);
+    } catch (err) {
+        showAlert(err.message, 'error');
+    }
+}
+
+/* ---- تهيئة ---- */
+document.addEventListener('DOMContentLoaded', () => {
+    loadCoursesList();
+});
+</script>
+</body>
+</html>

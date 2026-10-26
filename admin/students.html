@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الطلاب - منصة المجد</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ==================== SIDEBAR ==================== -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <a href="/" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
+            <span>🏆</span> منصة المجد
+        </a>
+    </div>
+    <nav>
+        <a href="index.html"><span class="nav-icon">📊</span> لوحة التحكم</a>
+        <a href="sections.html"><span class="nav-icon">📂</span> الأقسام</a>
+        <a href="courses.html"><span class="nav-icon">📚</span> الدورات</a>
+        <a href="lessons.html"><span class="nav-icon">🎬</span> الدروس</a>
+        <a href="students.html" class="active"><span class="nav-icon">👥</span> الطلاب</a>
+        <a href="exams.html"><span class="nav-icon">📝</span> الاختبارات</a>
+    </nav>
+    <div class="sidebar-footer">
+        <button onclick="handleLogout()">🚪 تسجيل الخروج</button>
+    </div>
+</aside>
+
+<!-- ==================== MAIN ==================== -->
+<main class="main-content">
+    <div class="page-header">
+        <h1>👥 إدارة الطلاب</h1>
+        <div class="admin-info" id="adminInfo"></div>
+    </div>
+
+    <div class="page-body">
+        <div class="card">
+            <div class="card-header">
+                <h3>👥 قائمة الطلاب المسجلين</h3>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <input type="text" id="searchInput" class="form-control" placeholder="🔍 بحث بالاسم أو الإيميل..." style="width:220px;" oninput="filterStudents()">
+                    <button class="btn btn-primary" onclick="openStudentModal()">
+                        ➕ إضافة طالب جديد
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الاسم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الهاتف</th>
+                            <th>تاريخ الانضمام</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsBody">
+                        <tr>
+                            <td colspan="6" class="no-data">
+                                <div class="spinner" style="margin:auto"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ==================== MODAL: إضافة / تعديل طالب ==================== -->
+<div class="modal-overlay" id="studentModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="studentModalTitle">➕ إضافة طالب جديد</h2>
+            <button class="modal-close" onclick="hideModal('studentModal')">✕</button>
+        </div>
+        <form id="studentForm" onsubmit="handleStudentSubmit(event)">
+            <input type="hidden" id="studentId">
+            <div class="form-group">
+                <label>اسم الطالب الكامل *</label>
+                <input type="text" id="studentName" class="form-control" required placeholder="مثال: أحمد محمد">
+            </div>
+            <div class="form-group">
+                <label>البريد الإلكتروني *</label>
+                <input type="email" id="studentEmail" class="form-control" required placeholder="student@example.com">
+            </div>
+            <div class="form-group" id="passwordGroup">
+                <label id="passwordLabel">كلمة المرور *</label>
+                <input type="password" id="studentPassword" class="form-control" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+                <label>رقم الهاتف</label>
+                <input type="tel" id="studentPhone" class="form-control" placeholder="05XXXXXXXX">
+            </div>
+            <div class="modal-footer" style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn btn-secondary" onclick="hideModal('studentModal')">إلغاء</button>
+                <button type="submit" class="btn btn-primary" id="saveStudentBtn">حفظ الطالب</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==================== MODAL: تفاصيل الطالب والدورات والنتائج ==================== -->
+<div class="modal-overlay" id="detailsModal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h2 id="detailsModalTitle">👤 تفاصيل الطالب</h2>
+            <button class="modal-close" onclick="hideModal('detailsModal')">✕</button>
+        </div>
+        <div style="margin-top:15px;">
+            <h4 style="color:var(--gold); margin-bottom:10px;">📚 الدورات المشترك بها:</h4>
+            <div id="studentCoursesList" style="margin-bottom:20px;"></div>
+
+            <h4 style="color:var(--gold); margin-bottom:10px;">📝 نتائج الاختبارات:</h4>
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الاختبار</th>
+                            <th>الدرجة</th>
+                            <th>المجموع</th>
+                            <th>النسبة</th>
+                            <th>التاريخ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentResultsBody">
+                        <tr><td colspan="5" class="no-data">لا توجد نتائج</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+let allStudents = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkAdminAuth();
+    await loadStudents();
+});
+
+async function loadStudents() {
+    try {
+        const res = await fetch('/api/users/students', { credentials: 'include' });
+        const data = await res.json();
+        allStudents = data.students || [];
+        renderStudents(allStudents);
+    } catch (err) {
+        showAlert('فشل في جلب قائمة الطلاب', 'error');
+    }
+}
+
+function renderStudents(list) {
+    const tbody = document.getElementById('studentsBody');
+    if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="no-data">لا يوجد طلاب مسجلون حالياً</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = list.map((s, idx) => `
+        <tr>
+            <td>${idx + 1}</td>
+            <td><strong>${escapeHtml(s.name)}</strong></td>
+            <td>${escapeHtml(s.email)}</td>
+            <td>${s.phone ? escapeHtml(s.phone) : '<span style="color:var(--text-secondary)">-</span>'}</td>
+            <td>${formatDate(s.created_at)}</td>
+            <td>
+                <div class="actions-cell">
+                    <button class="btn btn-secondary btn-sm" onclick="viewStudentDetails(${s.id}, '${escapeHtml(s.name)}')">👁️ تفاصيل</button>
+                    <button class="btn btn-primary btn-sm" onclick="editStudent(${JSON.stringify(s).replace(/"/g, '&quot;')})">✏️ تعديل</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteStudent(${s.id}, '${escapeHtml(s.name).replace(/'/g, "\\'")}')">🗑️ حذف</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterStudents() {
+    const query = document.getElementById('searchInput').value.trim().toLowerCase();
+    if (!query) {
+        renderStudents(allStudents);
+        return;
+    }
+    const filtered = allStudents.filter(s => 
+        (s.name && s.name.toLowerCase().includes(query)) ||
+        (s.email && s.email.toLowerCase().includes(query)) ||
+        (s.phone && s.phone.includes(query))
+    );
+    renderStudents(filtered);
+}
+
+function openStudentModal() {
+    document.getElementById('studentId').value = '';
+    document.getElementById('studentName').value = '';
+    document.getElementById('studentEmail').value = '';
+    document.getElementById('studentPassword').value = '';
+    document.getElementById('studentPhone').value = '';
+    document.getElementById('studentPassword').required = true;
+    document.getElementById('passwordLabel').innerText = 'كلمة المرور *';
+    document.getElementById('studentModalTitle').innerText = '➕ إضافة طالب جديد';
+    showModal('studentModal');
+}
+
+function editStudent(s) {
+    document.getElementById('studentId').value = s.id;
+    document.getElementById('studentName').value = s.name;
+    document.getElementById('studentEmail').value = s.email;
+    document.getElementById('studentPassword').value = '';
+    document.getElementById('studentPassword').required = false;
+    document.getElementById('passwordLabel').innerText = 'كلمة المرور (اتركها فارغة إذا لم ترد تغييرها)';
+    document.getElementById('studentPhone').value = s.phone || '';
+    document.getElementById('studentModalTitle').innerText = '✏️ تعديل بيانات الطالب';
+    showModal('studentModal');
+}
+
+async function handleStudentSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('studentId').value;
+    const name = document.getElementById('studentName').value.trim();
+    const email = document.getElementById('studentEmail').value.trim();
+    const password = document.getElementById('studentPassword').value;
+    const phone = document.getElementById('studentPhone').value.trim();
+
+    const isEdit = Boolean(id);
+    const url = isEdit ? `/api/admin/users/${id}` : '/api/admin/users';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    const payload = { name, email, phone, role: 'student' };
+    if (password) payload.password = password;
+
+    try {
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.success) {
+            showAlert(isEdit ? 'تم تحديث بيانات الطالب' : 'تم إضافة الطالب بنجاح', 'success');
+            hideModal('studentModal');
+            loadStudents();
+        } else {
+            showAlert(result.message || 'حدث خطأ أثناء الحفظ', 'error');
+        }
+    } catch (err) {
+        showAlert('فشل الاتصال بالسيرفر', 'error');
+    }
+}
+
+async function viewStudentDetails(studentId, studentName) {
+    document.getElementById('detailsModalTitle').innerText = `👤 تفاصيل الطالب: ${studentName}`;
+    document.getElementById('studentCoursesList').innerHTML = '<div class="spinner"></div>';
+    document.getElementById('studentResultsBody').innerHTML = '<tr><td colspan="5" class="no-data"><div class="spinner"></div></td></tr>';
+    showModal('detailsModal');
+
+    // جلب الدورات والنتائج
+    try {
+        // النتائج
+        const resResults = await fetch(`/api/results?user_id=${studentId}`, { credentials: 'include' });
+        const dataResults = await resResults.json();
+        const results = dataResults.results || [];
+        
+        const resultsBody = document.getElementById('studentResultsBody');
+        if (results.length === 0) {
+            resultsBody.innerHTML = '<tr><td colspan="5" class="no-data">لم يؤدِ هذا الطالب أي اختبار بعد</td></tr>';
+        } else {
+            resultsBody.innerHTML = results.map(r => {
+                const percent = Math.round((r.score / r.total) * 100);
+                return `
+                    <tr>
+                        <td><strong>${escapeHtml(r.exam_title || 'اختبار')}</strong></td>
+                        <td>${r.score}</td>
+                        <td>${r.total}</td>
+                        <td><span class="badge" style="background:var(--gold); color:#000;">${percent}%</span></td>
+                        <td>${formatDate(r.taken_at)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // جلب الدورات المسجل فيها من خلال قائمة الدورات
+        const resCourses = await fetch('/api/courses', { credentials: 'include' });
+        const coursesData = await resCourses.json();
+        const allCourses = coursesData.courses || [];
+        
+        let enrolledCourses = [];
+        for (const c of allCourses) {
+            const enrollRes = await fetch(`/api/enrollments?course_id=${c.id}`, { credentials: 'include' });
+            if (enrollRes.ok) {
+                const enrollData = await enrollRes.json();
+                const found = (enrollData.students || []).find(st => st.id === studentId || st.user_id === studentId);
+                if (found) enrolledCourses.push(c);
+            }
+        }
+
+        const coursesList = document.getElementById('studentCoursesList');
+        if (enrolledCourses.length === 0) {
+            coursesList.innerHTML = '<span style="color:var(--text-secondary)">غير مسجل في أي دورة حالياً.</span>';
+        } else {
+            coursesList.innerHTML = enrolledCourses.map(c => `
+                <span class="badge" style="background:rgba(0,210,211,0.2); color:var(--cyan); border:1px solid var(--cyan); padding:6px 12px; margin:4px; display:inline-block; border-radius:8px;">
+                    📚 ${escapeHtml(c.title)}
+                </span>
+            `).join(' ');
+        }
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function deleteStudent(studentId, name) {
+    if (!confirm(`هل أنت متأكد من حذف حساب الطالب "${name}" نهائياً؟`)) return;
+    try {
+        const res = await fetch(`/api/admin/users/${studentId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+            showAlert('تم حذف حساب الطالب بنجاح', 'success');
+            loadStudents();
+        } else {
+            showAlert(data.message || 'حدث خطأ أثناء الحذف', 'error');
+        }
+    } catch (err) {
+        showAlert('فشل الاتصال بالسيرفر', 'error');
+    }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الاختبارات - منصة المجد</title>
+    <link rel="stylesheet" href="admin.css">
+    <style>
+        .exam-builder-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 900px) {
+            .exam-builder-grid { grid-template-columns: 1fr; }
+        }
+        .question-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .question-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            padding-bottom: 6px;
+        }
+        .options-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+        .opt {
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.02);
+        }
+        .opt.correct {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--success);
+            color: #4ade80;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== SIDEBAR ==================== -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <a href="/" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
+            <span>🏆</span> منصة المجد
+        </a>
+    </div>
+    <nav>
+        <a href="index.html"><span class="nav-icon">📊</span> لوحة التحكم</a>
+        <a href="sections.html"><span class="nav-icon">📂</span> الأقسام</a>
+        <a href="courses.html"><span class="nav-icon">📚</span> الدورات</a>
+        <a href="lessons.html"><span class="nav-icon">🎬</span> الدروس</a>
+        <a href="students.html"><span class="nav-icon">👥</span> الطلاب</a>
+        <a href="exams.html" class="active"><span class="nav-icon">📝</span> الاختبارات</a>
+    </nav>
+    <div class="sidebar-footer">
+        <button onclick="handleLogout()">🚪 تسجيل الخروج</button>
+    </div>
+</aside>
+
+<!-- ==================== MAIN ==================== -->
+<main class="main-content">
+    <div class="page-header">
+        <h1>📝 إدارة وبناء الاختبارات</h1>
+        <div class="admin-info" id="adminInfo"></div>
+    </div>
+
+    <div class="page-body">
+        
+        <!-- التحكم بالدورة -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <label style="font-weight:bold; color:var(--gold);">اختر الدورة أولاً:</label>
+                    <select id="courseSelect" class="form-control" style="width:260px;" onchange="onCourseSelected()">
+                        <option value="">-- اختر الدورة --</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="openCreateExamModal()">➕ إنشاء اختبار جديد لهذه الدورة</button>
+            </div>
+        </div>
+
+        <div class="exam-builder-grid">
+            
+            <!-- قائمة الاختبارات -->
+            <div class="card">
+                <h3>📋 اختبارات الدورة المحددة</h3>
+                <div id="examsListContainer" style="margin-top:15px;">
+                    <p style="color:var(--text-secondary); text-align:center;">اختر دورة لعرض اختباراتها</p>
+                </div>
+            </div>
+
+            <!-- تفاصيل الاختبار والأسئلة -->
+            <div class="card" id="examDetailCard" style="display:none;">
+                <div class="card-header" style="margin-bottom:15px;">
+                    <div>
+                        <h3 id="currentExamTitle" style="color:var(--cyan); margin:0;">تفاصيل الاختبار</h3>
+                        <small id="currentExamMeta" style="color:var(--text-secondary);"></small>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="openAddQuestionModal()">➕ إضافة سؤال</button>
+                </div>
+
+                <div id="questionsContainer">
+                    <p style="color:var(--text-secondary); text-align:center;">لا توجد أسئلة مضافة بعد</p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</main>
+
+<!-- ==================== MODAL: إنشاء / تعديل اختبار ==================== -->
+<div class="modal-overlay" id="examModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="examModalTitle">➕ إنشاء اختبار جديد</h2>
+            <button class="modal-close" onclick="hideModal('examModal')">✕</button>
+        </div>
+        <form id="examForm" onsubmit="handleExamSubmit(event)">
+            <input type="hidden" id="examId">
+            <div class="form-group">
+                <label>عنوان الاختبار *</label>
+                <input type="text" id="examTitle" class="form-control" required placeholder="مثال: اختبار تحديد المستوى - كمي">
+            </div>
+            <div class="form-group">
+                <label>المدة بالدقائق *</label>
+                <input type="number" id="examDuration" class="form-control" required min="1" value="30">
+            </div>
+            <div class="form-group">
+                <label>نسبة النجاح (%) *</label>
+                <input type="number" id="examPassScore" class="form-control" required min="1" max="100" value="50">
+            </div>
+            <div class="modal-footer" style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn btn-secondary" onclick="hideModal('examModal')">إلغاء</button>
+                <button type="submit" class="btn btn-primary">حفظ الاختبار</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==================== MODAL: إضافة سؤال ==================== -->
+<div class="modal-overlay" id="questionModal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h2>➕ إضافة سؤال للاختبار</h2>
+            <button class="modal-close" onclick="hideModal('questionModal')">✕</button>
+        </div>
+        <form id="questionForm" onsubmit="handleQuestionSubmit(event)">
+            <div class="form-group">
+                <label>نص السؤال *</label>
+                <textarea id="qText" class="form-control" rows="3" required placeholder="اكتب نص السؤال هنا..."></textarea>
+            </div>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="form-group">
+                    <label>أ) الخيار الأول *</label>
+                    <input type="text" id="optA" class="form-control" required placeholder="الخيار أ">
+                </div>
+                <div class="form-group">
+                    <label>ب) الخيار الثاني *</label>
+                    <input type="text" id="optB" class="form-control" required placeholder="الخيار ب">
+                </div>
+                <div class="form-group">
+                    <label>ج) الخيار الثالث (اختياري)</label>
+                    <input type="text" id="optC" class="form-control" placeholder="الخيار ج">
+                </div>
+                <div class="form-group">
+                    <label>د) الخيار الرابع (اختياري)</label>
+                    <input type="text" id="optD" class="form-control" placeholder="الخيار د">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top:10px;">
+                <label style="color:var(--gold); font-weight:bold;">الإجابة الصحيحة *</label>
+                <select id="correctAnswer" class="form-control" required style="width:200px;">
+                    <option value="A">أ) الخيار الأول</option>
+                    <option value="B">ب) الخيار الثاني</option>
+                    <option value="C">ج) الخيار الثالث</option>
+                    <option value="D">د) الخيار الرابع</option>
+                </select>
+            </div>
+
+            <div class="modal-footer" style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn btn-secondary" onclick="hideModal('questionModal')">إلغاء</button>
+                <button type="submit" class="btn btn-primary">حفظ السؤال</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+let activeCourseId = null;
+let activeExam = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkAdminAuth();
+    await loadCoursesDropdown();
+});
+
+async function loadCoursesDropdown() {
+    try {
+        const res = await fetch('/api/courses', { credentials: 'include' });
+        const data = await res.json();
+        const select = document.getElementById('courseSelect');
+        const courses = data.courses || [];
+        select.innerHTML = '<option value="">-- اختر الدورة --</option>' + 
+            courses.map(c => `<option value="${c.id}">${escapeHtml(c.title)}</option>`).join('');
+    } catch (err) {
+        showAlert('فشل في جلب قائمة الدورات', 'error');
+    }
+}
+
+function onCourseSelected() {
+    activeCourseId = document.getElementById('courseSelect').value;
+    activeExam = null;
+    document.getElementById('examDetailCard').style.display = 'none';
+    if (!activeCourseId) {
+        document.getElementById('examsListContainer').innerHTML = '<p style="color:var(--text-secondary); text-align:center;">اختر دورة لعرض اختباراتها</p>';
+        return;
+    }
+    loadExams();
+}
+
+async function loadExams() {
+    if (!activeCourseId) return;
+    try {
+        const res = await fetch(`/api/exams?course_id=${activeCourseId}`, { credentials: 'include' });
+        const data = await res.json();
+        const exams = data.exams || [];
+        const container = document.getElementById('examsListContainer');
+
+        if (exams.length === 0) {
+            container.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">لا توجد اختبارات لهذه الدورة بعد. انقر على "إنشاء اختبار جديد".</p>';
+            return;
+        }
+
+        container.innerHTML = exams.map(ex => `
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h4 style="margin:0 0 5px 0; color:var(--text-primary); cursor:pointer;" onclick="selectExam(${ex.id})">
+                        📝 ${escapeHtml(ex.title)}
+                    </h4>
+                    <span style="font-size:0.85rem; color:var(--text-secondary);">
+                        ⏱️ ${ex.duration_minutes} دقيقة | 🎯 نسبة النجاح: ${ex.pass_score}%
+                    </span>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-secondary btn-sm" onclick="selectExam(${ex.id})">الأسئلة ⚙️</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteExam(${ex.id})">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+
+        // لو كان فيه اختبار محدد مسبقاً، نحدّث تفاصيله
+        if (activeExam) {
+            selectExam(activeExam.id);
+        }
+    } catch (err) {
+        showAlert('فشل في جلب الاختبارات', 'error');
+    }
+}
+
+async function selectExam(examId) {
+    try {
+        const res = await fetch(`/api/exams/${examId}`, { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) {
+            showAlert(data.message || 'فشل في قراءة بيانات الاختبار', 'error');
+            return;
+        }
+        activeExam = data.exam;
+        const questions = data.questions || (data.exam && data.exam.questions) || [];
+
+        document.getElementById('examDetailCard').style.display = 'block';
+        document.getElementById('currentExamTitle').innerText = `📝 ${activeExam.title}`;
+        document.getElementById('currentExamMeta').innerText = `المدة: ${activeExam.duration_minutes} دقيقة | النجاح من: ${activeExam.pass_score}% | عدد الأسئلة: ${questions.length}`;
+
+        renderQuestions(questions);
+    } catch (err) {
+        showAlert('فشل في جلب تفاصيل الاختبار', 'error');
+    }
+}
+
+function renderQuestions(questions) {
+    const container = document.getElementById('questionsContainer');
+    if (questions.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">لا توجد أسئلة مضافة بعد. اضغط "➕ إضافة سؤال" لإضافة أول سؤال.</p>';
+        return;
+    }
+
+    container.innerHTML = questions.map((q, idx) => `
+        <div class="question-item">
+            <div class="question-item-header">
+                <strong>س ${idx + 1}: ${escapeHtml(q.question_text)}</strong>
+                <button class="btn btn-danger btn-sm" onclick="deleteQuestion(${q.id})">🗑️ حذف</button>
+            </div>
+            <div class="options-list">
+                <div class="opt ${q.correct_answer === 'A' ? 'correct' : ''}">أ) ${escapeHtml(q.option_a)}</div>
+                <div class="opt ${q.correct_answer === 'B' ? 'correct' : ''}">ب) ${escapeHtml(q.option_b)}</div>
+                ${q.option_c ? `<div class="opt ${q.correct_answer === 'C' ? 'correct' : ''}">ج) ${escapeHtml(q.option_c)}</div>` : ''}
+                ${q.option_d ? `<div class="opt ${q.correct_answer === 'D' ? 'correct' : ''}">د) ${escapeHtml(q.option_d)}</div>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function openCreateExamModal() {
+    if (!activeCourseId) {
+        showAlert('يرجى اختيار الدورة أولاً', 'warning');
+        return;
+    }
+    document.getElementById('examId').value = '';
+    document.getElementById('examTitle').value = '';
+    document.getElementById('examDuration').value = 30;
+    document.getElementById('examPassScore').value = 50;
+    document.getElementById('examModalTitle').innerText = '➕ إنشاء اختبار جديد';
+    showModal('examModal');
+}
+
+async function handleExamSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('examId').value;
+    const title = document.getElementById('examTitle').value.trim();
+    const duration_minutes = parseInt(document.getElementById('examDuration').value);
+    const pass_score = parseInt(document.getElementById('examPassScore').value);
+
+    const isEdit = Boolean(id);
+    const url = isEdit ? `/api/exams/${id}` : '/api/exams';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    try {
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ course_id: activeCourseId, title, duration_minutes, pass_score })
+        });
+        const result = await res.json();
+        if (result.success) {
+            showAlert(isEdit ? 'تم تحديث الاختبار' : 'تم إنشاء الاختبار بنجاح', 'success');
+            hideModal('examModal');
+            loadExams();
+        } else {
+            showAlert(result.message || 'حدث خطأ', 'error');
+        }
+    } catch (err) {
+        showAlert('فشل الاتصال بالسيرفر', 'error');
+    }
+}
+
+async function deleteExam(examId) {
+    if (!confirm('هل أنت متأكد من حذف هذا الاختبار وجميع أسئلته ونتائجه؟')) return;
+    try {
+        const res = await fetch(`/api/exams/${examId}`, { method: 'DELETE', credentials: 'include' });
+        const result = await res.json();
+        if (result.success) {
+            showAlert('تم حذف الاختبار بنجاح', 'success');
+            if (activeExam && activeExam.id === examId) {
+                activeExam = null;
+                document.getElementById('examDetailCard').style.display = 'none';
+            }
+            loadExams();
+        } else {
+            showAlert(result.message || 'فشل حذف الاختبار', 'error');
+        }
+    } catch (err) {
+        showAlert('فشل الاتصال بالسيرفر', 'error');
+    }
+}
+
+function openAddQuestionModal() {
+    if (!activeExam) return;
+    document.getElementById('qText').value = '';
+    document.getElementById('optA').value = '';
+    document.getElementById('optB').value = '';
+    document.getElementById('optC').value = '';
+    document.getElementById('optD').value = '';
+    document.getElementById('correctAnswer').value = 'A';
+    showModal('questionModal');
+}
+
+async function handleQuestionSubmit(e) {
+    e.preventDefault();
+    if (!activeExam) return;
+
+    const question_text = document.getElementById('qText').value.trim();
+    const option_a = document.getElementById('optA').value.trim();
+    const option_b = document.getElementById('optB').value.trim();
+    const option_c = document.getElementById('optC').value.trim();
+    const option_d = document.getElementById('optD').value.trim();
+    const correct_answer = document.getElementById('correctAnswer').value;
+
+    try {
+        const res = await fetch('/api/questions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                exam_id: activeExam.id,
+                question_text,
+                option_a,
+                option_b,
+                option_c: option_c || null,
+                option_d: option_d || null,
+                correct_answer
+            })
+        });
+        const result = await res.json();
+        if (result.success) {
+            showAlert('تمت إضافة السؤال بنجاح', 'success');
+            hideModal('questionModal');
+            selectExam(activeExam.id);
+        } else {
+            showAlert(result.message || 'فشل إضافة السؤال', 'error');
+        }
+    } catch (err) {
+        showAlert('فشل الاتصال بالسيرفر', 'error');
+    }
+}
+
+async function deleteQuestion(questionId) {
+    if (!confirm('هل أنت متأكد من حذف هذا السؤال؟')) return;
+    try {
+        const res = await fetch(`/api/questions/${questionId}`, { method: 'DELETE', credentials: 'include' });
+        const result = await res.json();
+        if (result.success) {
+            showAlert('تم حذف السؤال', 'success');
+            selectExam(activeExam.id);
+        } else {
+            showAlert(result.message || 'فشل الحذف', 'error');
+        }
+    } catch (err) {
+        showAlert('فشل الاتصال بالسيرفر', 'error');
+    }
+}
+</script>
+</body>
+</html>

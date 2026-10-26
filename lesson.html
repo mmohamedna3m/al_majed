@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة المجد - الدرس</title>
+    <link rel="stylesheet" href="lesson-style.css">
+</head>
+<body>
+
+    <header class="lesson-header">
+        <div class="brand" onclick="window.location.href='/'" style="cursor:pointer; margin-left:15px; font-weight:bold; color:var(--gold); font-size:1.15rem;" title="العودة للصفحة الرئيسية">
+            <a href="/" style="text-decoration:none; color:inherit;">🏆 منصة المجد</a>
+        </div>
+        <button class="btn-back-lesson" onclick="history.back()">← رجوع</button>
+        <div class="lesson-header-info">
+            <h1 class="lesson-header-title" id="lessonTitle">جاري التحميل...</h1>
+            <span class="course-badge" id="courseName"></span>
+        </div>
+    </header>
+
+    <!-- Layout: 50/50 -->
+    <div class="lesson-layout">
+
+        <!-- النصف الأيسر: الفيديو -->
+        <div class="video-zone">
+            <div class="video-wrapper" id="videoWrapper">
+                <div class="no-video" id="noVideo">
+                    <span class="no-video-icon">🎬</span>
+                    <p>لا يوجد فيديو لهذا الدرس</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- النصف الأيمن: المحتوى -->
+        <div class="content-zone">
+
+            <!-- قائمة دروس الدورة -->
+            <div class="lessons-nav" id="lessonsNav">
+                <h3 class="lessons-nav-title">📋 محتوى الدورة</h3>
+                <div id="lessonsList">
+                    <div class="nav-loading">⏳ جاري التحميل...</div>
+                </div>
+            </div>
+
+            <!-- محتوى الدرس النصي -->
+            <div class="lesson-text-block" id="lessonText"></div>
+
+            <!-- قسم PDF -->
+            <div class="pdf-section" id="pdfSection" style="display:none;">
+                <div class="pdf-header">
+                    <h3>📄 ملف الدرس</h3>
+                    <div class="pdf-actions">
+                        <button class="btn-gold" id="downloadPdfBtn">⬇️ تنزيل الملف</button>
+                    </div>
+                </div>
+                <iframe id="pdfViewer" class="pdf-viewer" src="" frameborder="0" title="ملف الدرس"></iframe>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="lesson-script.js"></script>
+</body>
+</html>

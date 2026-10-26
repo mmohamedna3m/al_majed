@@ -1,0 +1,318 @@
+/* ===== Variables ===== */
+:root {
+    --bg-dark: #0d0d1a;
+    --bg-card: #1a1a2e;
+    --bg-sidebar: #16213e;
+    --gold: #d4af37;
+    --gold-light: rgba(212, 175, 55, 0.12);
+    --gold-border: rgba(212, 175, 55, 0.3);
+    --cyan: #00d2d3;
+    --cyan-light: rgba(0, 210, 211, 0.1);
+    --text-primary: #e0e0e0;
+    --text-secondary: #9ca3af;
+    --success: #10b981;
+    --danger: #ef4444;
+    --border: rgba(212, 175, 55, 0.2);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    --radius: 12px;
+    --header-height: 64px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    direction: rtl;
+    min-height: 100vh;
+}
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; border: none; font-family: inherit; outline: none; }
+
+/* ===== Header ===== */
+.course-header-bar {
+    position: fixed;
+    top: 0; right: 0; left: 0;
+    height: var(--header-height);
+    background: rgba(13, 13, 26, 0.96);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--gold-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    z-index: 100;
+}
+
+.brand {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(212,175,55,0.4);
+}
+
+.btn-back {
+    padding: 8px 18px;
+    border: 1px solid var(--gold-border);
+    color: var(--gold);
+    border-radius: 8px;
+    font-size: 0.88rem;
+    transition: all 0.25s;
+}
+.btn-back:hover {
+    background: var(--gold-light);
+    box-shadow: 0 0 12px rgba(212,175,55,0.2);
+}
+
+/* ===== Container ===== */
+.course-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: calc(var(--header-height) + 30px) 24px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* ===== Hero ===== */
+.course-hero {
+    background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+    border: 1px solid var(--gold-border);
+    border-radius: 16px;
+    padding: 44px 40px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.course-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: -60px;
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(212,175,55,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.course-section-tag {
+    display: inline-block;
+    background: var(--cyan-light);
+    border: 1px solid rgba(0,210,211,0.25);
+    color: var(--cyan);
+    font-size: 0.8rem;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+}
+
+.course-hero-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 14px;
+    text-shadow: 0 0 30px rgba(212,175,55,0.3);
+}
+
+.course-hero-desc {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    max-width: 700px;
+    line-height: 1.7;
+}
+
+/* ===== Section Block ===== */
+.section-block { }
+
+.section-title {
+    font-size: 1.2rem;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ===== Lessons Grid ===== */
+.lessons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+}
+
+.lesson-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: all 0.3s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+.lesson-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--gold);
+    box-shadow: 0 8px 28px rgba(212,175,55,0.15);
+}
+
+.lesson-num-badge {
+    width: 40px;
+    height: 40px;
+    background: var(--gold-light);
+    border: 1px solid var(--gold-border);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--gold);
+    flex-shrink: 0;
+}
+
+.lesson-card-info { flex: 1; min-width: 0; }
+
+.lesson-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lesson-card-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.meta-tag {
+    font-size: 0.75rem;
+    padding: 2px 10px;
+    border-radius: 10px;
+}
+
+.meta-video {
+    background: rgba(0,210,211,0.1);
+    color: var(--cyan);
+    border: 1px solid rgba(0,210,211,0.2);
+}
+
+.meta-pdf {
+    background: rgba(212,175,55,0.1);
+    color: var(--gold);
+    border: 1px solid var(--gold-border);
+}
+
+/* ===== Exams Grid ===== */
+.exams-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+}
+
+.exam-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.exam-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(0,210,211,0.5);
+    box-shadow: 0 8px 28px rgba(0,210,211,0.1);
+}
+
+.exam-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.exam-meta-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.exam-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.exam-meta-label {
+    font-size: 0.74rem;
+    color: var(--text-secondary);
+}
+
+.exam-meta-val {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gold);
+}
+
+.btn-start-exam {
+    display: block;
+    text-align: center;
+    padding: 10px 18px;
+    background: linear-gradient(135deg, var(--cyan), #009899);
+    color: #0d0d1a;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.25s;
+    box-shadow: 0 4px 14px rgba(0,210,211,0.25);
+}
+
+.btn-start-exam:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 22px rgba(0,210,211,0.4);
+}
+
+/* ===== Loading/Empty ===== */
+.loading-ph, .empty-ph {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+    .course-hero { padding: 28px 20px; }
+    .course-hero-title { font-size: 1.4rem; }
+    .course-container { padding: calc(var(--header-height) + 16px) 14px 40px; gap: 28px; }
+    .lessons-grid, .exams-grid { grid-template-columns: 1fr; }
+    .course-header-bar { padding: 0 14px; }
+}
+
+
+/* ==================== شريط التمرير الفاخر ==================== */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-dark, #0d0d1a); }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #d4af37, #8e7320); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #00d2d3; }
+* { scrollbar-width: thin; scrollbar-color: #d4af37 #0d0d1a; }

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - منصة المجد</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ==================== SIDEBAR ==================== -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <a href="/" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
+            <span>🏆</span> منصة المجد
+        </a>
+    </div>
+    <nav>
+        <a href="index.html" class="active">
+            <span class="nav-icon">📊</span> لوحة التحكم
+        </a>
+        <a href="sections.html">
+            <span class="nav-icon">📂</span> الأقسام
+        </a>
+        <a href="courses.html">
+            <span class="nav-icon">📚</span> الدورات
+        </a>
+        <a href="lessons.html">
+            <span class="nav-icon">🎬</span> الدروس
+        </a>
+        <a href="students.html">
+            <span class="nav-icon">👥</span> الطلاب
+        </a>
+        <a href="exams.html">
+            <span class="nav-icon">📝</span> الاختبارات
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <button onclick="handleLogout()">🚪 تسجيل الخروج</button>
+    </div>
+</aside>
+
+<!-- ==================== MAIN ==================== -->
+<main class="main-content">
+
+    <!-- Header -->
+    <div class="page-header">
+        <h1>📊 لوحة التحكم الرئيسية</h1>
+        <div class="admin-info" id="adminInfo">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- Body -->
+    <div class="page-body">
+
+        <!-- إحصائيات -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon">👥</span>
+                <span class="stat-num" id="totalStudents">…</span>
+                <span class="stat-label">طالب مسجل</span>
+            </div>
+            <div class="stat-card cyan">
+                <span class="stat-icon">📚</span>
+                <span class="stat-num" id="totalCourses">…</span>
+                <span class="stat-label">دورة تعليمية</span>
+            </div>
+            <div class="stat-card success">
+                <span class="stat-icon">📂</span>
+                <span class="stat-num" id="totalSections">…</span>
+                <span class="stat-label">قسم تعليمي</span>
+            </div>
+            <div class="stat-card danger">
+                <span class="stat-icon">📝</span>
+                <span class="stat-num" id="totalExams">…</span>
+                <span class="stat-label">اختبار</span>
+            </div>
+        </div>
+
+        <!-- آخر الطلاب المسجلين -->
+        <div class="card">
+            <div class="card-header">
+                <h3>👥 آخر الطلاب المسجلين</h3>
+                <a href="students.html" class="btn btn-secondary btn-sm">عرض الكل ←</a>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table" id="recentStudentsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الاسم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>تاريخ الانضمام</th>
+                            <th>عدد الدورات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentStudentsBody">
+                        <tr>
+                            <td colspan="5" class="no-data">
+                                <div class="spinner" style="margin: auto;"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- آخر الدورات المضافة -->
+        <div class="card">
+            <div class="card-header">
+                <h3>📚 آخر الدورات المضافة</h3>
+                <a href="courses.html" class="btn btn-secondary btn-sm">إدارة الدورات ←</a>
+            </div>
+            <div class="table-wrapper">
+                <table class="data-table" id="recentCoursesTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الدورة</th>
+                            <th>القسم</th>
+                            <th>السعر</th>
+                            <th>عدد الطلاب</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentCoursesBody">
+                        <tr>
+                            <td colspan="5" class="no-data">
+                                <div class="spinner" style="margin: auto;"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- /page-body -->
+</main>
+
+<script src="admin.js"></script>
+<script>
+'use strict';
+
+/* ---- تحميل الإحصائيات ---- */
+async function loadStats() {
+    try {
+        const stats = await apiRequest('/api/admin/stats');
+        document.getElementById('totalStudents').textContent = stats.totalStudents ?? stats.students ?? 0;
+        document.getElementById('totalCourses').textContent  = stats.totalCourses  ?? stats.courses  ?? 0;
+        document.getElementById('totalSections').textContent = stats.totalSections ?? stats.sections ?? 0;
+        document.getElementById('totalExams').textContent    = stats.totalExams    ?? stats.exams    ?? 0;
+    } catch (err) {
+        console.error('Stats error:', err);
+        ['totalStudents','totalCourses','totalSections','totalExams'].forEach(id => {
+            document.getElementById(id).textContent = '—';
+        });
+    }
+}
+
+/* ---- آخر الطلاب ---- */
+async function loadRecentStudents() {
+    const tbody = document.getElementById('recentStudentsBody');
+    try {
+        const resData = await apiRequest('/api/users/students');
+        const students = Array.isArray(resData) ? resData : (resData.students || []);
+        if (!students || students.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="no-data">لا يوجد طلاب مسجلون بعد</td></tr>';
+            return;
+        }
+        tbody.innerHTML = students.slice(0, 5).map((s, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td><strong>${escapeHtml(s.name)}</strong></td>
+                <td>${escapeHtml(s.email)}</td>
+                <td>${formatDate(s.created_at)}</td>
+                <td><span class="badge badge-student">طالب</span></td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="no-data">خطأ في تحميل البيانات</td></tr>`;
+    }
+}
+
+/* ---- آخر الدورات ---- */
+async function loadRecentCourses() {
+    const tbody = document.getElementById('recentCoursesBody');
+    try {
+        const resData = await apiRequest('/api/courses');
+        const courses = Array.isArray(resData) ? resData : (resData.courses || []);
+        if (!courses || courses.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="no-data">لا توجد دورات بعد</td></tr>';
+            return;
+        }
+        tbody.innerHTML = courses.slice(0, 5).map((c, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td><strong>${escapeHtml(c.title)}</strong></td>
+                <td>${escapeHtml(c.section_title || '—')}</td>
+                <td>${c.price ? c.price + ' ر.س' : '<span class="badge badge-success">مجاني</span>'}</td>
+                <td><span class="badge badge-student">دورة</span></td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="no-data">خطأ في تحميل البيانات</td></tr>`;
+    }
+}
+
+/* ---- تهيئة الصفحة ---- */
+document.addEventListener('DOMContentLoaded', () => {
+    loadStats();
+    loadRecentStudents();
+    loadRecentCourses();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الدورات - منصة المجد</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ==================== SIDEBAR ==================== -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <a href="/" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
+            <span>🏆</span> منصة المجد
+        </a>
+    </div>
+    <nav>
+        <a href="index.html"><span class="nav-icon">📊</span> لوحة التحكم</a>
+        <a href="sections.html"><span class="nav-icon">📂</span> الأقسام</a>
+        <a href="courses.html" class="active"><span class="nav-icon">📚</span> الدورات</a>
+        <a href="lessons.html"><span class="nav-icon">🎬</span> الدروس</a>
+        <a href="students.html"><span class="nav-icon">👥</span> الطلاب</a>
+        <a href="exams.html"><span class="nav-icon">📝</span> الاختبارات</a>
+    </nav>
+    <div class="sidebar-footer">
+        <button onclick="handleLogout()">🚪 تسجيل الخروج</button>
+    </div>
+</aside>
+
+<!-- ==================== MAIN ==================== -->
+<main class="main-content">
+    <div class="page-header">
+        <h1>📚 إدارة الدورات</h1>
+        <div class="admin-info" id="adminInfo"></div>
+    </div>
+
+    <div class="page-body">
+        <div class="card">
+            <div class="card-header">
+                <h3>📚 قائمة الدورات</h3>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <!-- فلترة بالقسم -->
+                    <select class="form-control" id="filterSection" onchange="loadCourses()" style="width:auto; min-width:160px;">
+                        <option value="">📂 جميع الأقسام</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="openCourseModal()">
+                        ➕ إضافة دورة جديدة
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الصورة</th>
+                            <th>اسم الدورة</th>
+                            <th>القسم</th>
+                            <th>السعر</th>
+                            <th>الطلاب</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coursesBody">
+                        <tr>
+                            <td colspan="7" class="no-data">
+                                <div class="spinner" style="margin:auto"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ==================== MODAL: إضافة / تعديل دورة ==================== -->
+<div class="modal-overlay" id="courseModal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h2 id="courseModalTitle">➕ إضافة دورة جديدة</h2>
+            <button class="modal-close" onclick="hideModal('courseModal')">✕</button>
+        </div>
+        <form id="courseForm" onsubmit="submitCourse(event)" enctype="multipart/form-data">
+            <input type="hidden" id="courseId">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>القسم *</label>
+                    <select class="form-control" id="courseSectionId" required>
+                        <option value="">اختر القسم...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>اسم الدورة *</label>
+                    <input class="form-control" id="courseTitle" placeholder="مثال: الرياضيات للمرحلة الثانوية" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>وصف الدورة</label>
+                <textarea class="form-control" id="courseDescription" rows="3" placeholder="اكتب وصفاً مختصراً للدورة..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>السعر (اتركه فارغاً للمجان)</label>
+                    <input class="form-control" id="coursePrice" type="number" min="0" step="0.01" placeholder="مثال: 99.99">
+                </div>
+                <div class="form-group">
+                    <label>📷 الصورة المصغرة</label>
+                    <div class="file-input-wrapper">
+                        <div class="file-input-label">
+                            <span>📁</span> اختر صورة...
+                        </div>
+                        <input type="file" id="courseThumbnail" accept="image/*" onchange="previewThumbnail(this)">
+                    </div>
+                    <div id="thumbnailPreviewContainer" style="margin-top:8px;"></div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="courseSubmitBtn">
+                    💾 حفظ الدورة
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="hideModal('courseModal')">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==================== MODAL: إدارة طلاب الدورة ==================== -->
+<div class="modal-overlay" id="courseStudentsModal">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h2 id="courseStudentsTitle">👥 طلاب الدورة</h2>
+            <button class="modal-close" onclick="hideModal('courseStudentsModal')">✕</button>
+        </div>
+
+        <!-- اشتراك طالب جديد -->
+        <div class="card" style="margin-bottom:20px; padding:16px;">
+            <h4 style="color:var(--gold); margin-bottom:12px;">➕ إضافة طالب للدورة</h4>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <select class="form-control" id="enrollStudentSelect" style="flex:1; min-width:200px;">
+                    <option value="">اختر طالباً...</option>
+                </select>
+                <button class="btn btn-success" onclick="enrollStudent()">✅ اشتراك</button>
+            </div>
+        </div>
+
+        <!-- جدول الطلاب المشتركين -->
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الاسم</th>
+                        <th>البريد الإلكتروني</th>
+                        <th>تاريخ الاشتراك</th>
+                        <th>إجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="courseStudentsBody">
+                    <tr><td colspan="5" class="no-data">جاري التحميل...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+'use strict';
+
+let allStudents = []; // كل الطلاب المتاحين
+let currentCourseId = null; // الدورة المفتوحة في مودال الطلاب
+
+/* ---- تحميل الأقسام في القوائم ---- */
+async function loadSectionsDropdown() {
+    try {
+        const sections = await apiRequest('/api/sections');
+        const filterSel  = document.getElementById('filterSection');
+        const courseSel  = document.getElementById('courseSectionId');
+
+        sections.forEach(s => {
+            const opt1 = new Option(`${s.icon || '📂'} ${s.title}`, s.id);
+            const opt2 = new Option(`${s.icon || '📂'} ${s.title}`, s.id);
+            filterSel.add(opt1);
+            courseSel.add(opt2);
+        });
+    } catch (err) {
+        console.error('Sections dropdown error:', err);
+    }
+}
+
+/* ---- تحميل الطلاب في الذاكرة ---- */
+async function loadAllStudents() {
+    try {
+        allStudents = await apiRequest('/api/users/students');
+    } catch { allStudents = []; }
+}
+
+/* ---- تحميل الدورات ---- */
+async function loadCourses() {
+    const tbody      = document.getElementById('coursesBody');
+    const sectionFilter = document.getElementById('filterSection').value;
+    let url = '/api/courses';
+    if (sectionFilter) url += `?section_id=${sectionFilter}`;
+
+    tbody.innerHTML = '<tr><td colspan="7" class="no-data"><div class="spinner" style="margin:auto"></div></td></tr>';
+    try {
+        const courses = await apiRequest(url);
+        if (!courses || courses.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="no-data">لا توجد دورات بعد</td></tr>';
+            return;
+        }
+        tbody.innerHTML = courses.map((c, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td>
+                    ${c.thumbnail
+                        ? `<img src="${escapeHtml(c.thumbnail)}" class="thumbnail-preview" alt="">`
+                        : `<div class="thumbnail-placeholder">📚</div>`}
+                </td>
+                <td><strong>${escapeHtml(c.title)}</strong></td>
+                <td>${escapeHtml(c.section?.title || '—')}</td>
+                <td>${c.price ? c.price + ' ر.س' : '<span class="badge badge-success">مجاني</span>'}</td>
+                <td><span class="badge badge-student">${c.students_count ?? 0}</span></td>
+                <td>
+                    <div class="actions">
+                        <button class="btn btn-secondary btn-sm" onclick="openCourseModal(${JSON.stringify(c).replace(/"/g,'&quot;')})">✏️</button>
+                        <button class="btn btn-cyan btn-sm" onclick="openCourseStudents(${c.id}, '${escapeHtml(c.title).replace(/'/g,"\\'")}')">👥</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteCourse(${c.id}, '${escapeHtml(c.title).replace(/'/g,"\\'")}')">🗑️</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="7" class="no-data">❌ ${escapeHtml(err.message)}</td></tr>`;
+        showAlert(err.message, 'error');
+    }
+}
+
+/* ---- فتح مودال إضافة/تعديل ---- */
+function openCourseModal(course = null) {
+    if (course) {
+        document.getElementById('courseModalTitle').textContent = '✏️ تعديل الدورة';
+        document.getElementById('courseSubmitBtn').textContent  = '💾 حفظ التعديلات';
+        document.getElementById('courseId').value          = course.id;
+        document.getElementById('courseTitle').value       = course.title || '';
+        document.getElementById('courseDescription').value = course.description || '';
+        document.getElementById('coursePrice').value       = course.price || '';
+        document.getElementById('courseSectionId').value   = course.section_id || '';
+        const prev = document.getElementById('thumbnailPreviewContainer');
+        prev.innerHTML = course.thumbnail
+            ? `<img src="${escapeHtml(course.thumbnail)}" class="thumbnail-preview" style="width:80px; height:55px;">`
+            : '';
+    } else {
+        document.getElementById('courseModalTitle').textContent = '➕ إضافة دورة جديدة';
+        document.getElementById('courseSubmitBtn').textContent  = '💾 إضافة الدورة';
+        document.getElementById('courseId').value          = '';
+        document.getElementById('courseTitle').value       = '';
+        document.getElementById('courseDescription').value = '';
+        document.getElementById('coursePrice').value       = '';
+        document.getElementById('courseSectionId').value   = '';
+        document.getElementById('thumbnailPreviewContainer').innerHTML = '';
+    }
+    showModal('courseModal');
+}
+
+/* ---- معاينة الصورة المصغرة ---- */
+function previewThumbnail(input) {
+    const container = document.getElementById('thumbnailPreviewContainer');
+    if (input.files && input.files[0]) {
+        const url = URL.createObjectURL(input.files[0]);
+        container.innerHTML = `<img src="${url}" class="thumbnail-preview" style="width:80px; height:55px;">`;
+    }
+}
+
+/* ---- إرسال نموذج الدورة ---- */
+async function submitCourse(event) {
+    event.preventDefault();
+    const id = document.getElementById('courseId').value;
+    const btn = document.getElementById('courseSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ جاري الحفظ...';
+
+    try {
+        const fd = new FormData();
+        fd.append('title',       document.getElementById('courseTitle').value.trim());
+        fd.append('description', document.getElementById('courseDescription').value.trim());
+        fd.append('section_id',  document.getElementById('courseSectionId').value);
+        const price = document.getElementById('coursePrice').value;
+        if (price) fd.append('price', price);
+        const thumbFile = document.getElementById('courseThumbnail').files[0];
+        if (thumbFile) fd.append('thumbnail', thumbFile);
+
+        await apiRequest(id ? `/api/courses/${id}` : '/api/courses', {
+            method: id ? 'PUT' : 'POST',
+            body: fd,
+        });
+
+        showAlert(id ? 'تم تعديل الدورة بنجاح ✅' : 'تم إضافة الدورة بنجاح ✅', 'success');
+        hideModal('courseModal');
+        loadCourses();
+    } catch (err) {
+        showAlert(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 حفظ الدورة';
+    }
+}
+
+/* ---- حذف دورة ---- */
+async function deleteCourse(id, title) {
+    if (!confirmDelete(`هل تريد حذف الدورة "${title}"؟`)) return;
+    try {
+        await apiRequest(`/api/courses/${id}`, { method: 'DELETE' });
+        showAlert('تم حذف الدورة بنجاح', 'success');
+        loadCourses();
+    } catch (err) {
+        showAlert(err.message, 'error');
+    }
+}
+
+/* ---- فتح مودال طلاب الدورة ---- */
+async function openCourseStudents(courseId, courseTitle) {
+    currentCourseId = courseId;
+    document.getElementById('courseStudentsTitle').textContent = `👥 طلاب: ${courseTitle}`;
+    showModal('courseStudentsModal');
+    loadCourseStudents(courseId);
+    populateEnrollSelect(courseId);
+}
+
+/* ---- تحميل طلاب الدورة ---- */
+async function loadCourseStudents(courseId) {
+    const tbody = document.getElementById('courseStudentsBody');
+    tbody.innerHTML = '<tr><td colspan="5" class="no-data"><div class="spinner" style="margin:auto"></div></td></tr>';
+    try {
+        const students = await apiRequest(`/api/courses/${courseId}/students`);
+        if (!students || students.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="no-data">لا يوجد طلاب مشتركون في هذه الدورة</td></tr>';
+            return;
+        }
+        tbody.innerHTML = students.map((s, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td><strong>${escapeHtml(s.name)}</strong></td>
+                <td>${escapeHtml(s.email)}</td>
+                <td>${formatDate(s.enrolled_at)}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="unenrollStudent(${s.id}, '${escapeHtml(s.name).replace(/'/g,"\\'")}')">
+                        ❌ إزالة
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="no-data">❌ ${escapeHtml(err.message)}</td></tr>`;
+    }
+}
+
+/* ---- تعبئة select اختيار الطالب ---- */
+async function populateEnrollSelect(courseId) {
+    const sel = document.getElementById('enrollStudentSelect');
+    sel.innerHTML = '<option value="">جاري التحميل...</option>';
+    try {
+        // نحمل كل الطلاب والمشتركين لنستبعد المشتركين
+        const [all, enrolled] = await Promise.all([
+            apiRequest('/api/users/students'),
+            apiRequest(`/api/courses/${courseId}/students`),
+        ]);
+        const enrolledIds = new Set((enrolled || []).map(s => s.id));
+        const available = (all || []).filter(s => !enrolledIds.has(s.id));
+
+        sel.innerHTML = '<option value="">اختر طالباً...</option>';
+        available.forEach(s => {
+            sel.add(new Option(`${s.name} — ${s.email}`, s.id));
+        });
+    } catch (err) {
+        sel.innerHTML = '<option value="">خطأ في التحميل</option>';
+    }
+}
+
+/* ---- اشتراك طالب ---- */
+async function enrollStudent() {
+    const studentId = document.getElementById('enrollStudentSelect').value;
+    if (!studentId) { showAlert('اختر طالباً أولاً', 'warning'); return; }
+    try {
+        await apiRequest(`/api/courses/${currentCourseId}/students`, {
+            method: 'POST',
+            body: JSON.stringify({ student_id: studentId }),
+        });
+        showAlert('تم تسجيل الطالب في الدورة ✅', 'success');
+        loadCourseStudents(currentCourseId);
+        populateEnrollSelect(currentCourseId);
+    } catch (err) {
+        showAlert(err.message, 'error');
+    }
+}
+
+/* ---- إلغاء اشتراك طالب ---- */
+async function unenrollStudent(studentId, studentName) {
+    if (!confirmDelete(`هل تريد إزالة "${studentName}" من الدورة؟`)) return;
+    try {
+        await apiRequest(`/api/courses/${currentCourseId}/students/${studentId}`, { method: 'DELETE' });
+        showAlert('تم إزالة الطالب من الدورة', 'success');
+        loadCourseStudents(currentCourseId);
+        populateEnrollSelect(currentCourseId);
+    } catch (err) {
+        showAlert(err.message, 'error');
+    }
+}
+
+/* ---- تهيئة ---- */
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadSectionsDropdown();
+    loadCourses();
+    loadAllStudents();
+});
+</script>
+</body>
+</html>

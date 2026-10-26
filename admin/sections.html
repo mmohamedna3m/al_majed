@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الأقسام - منصة المجد</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<!-- ==================== SIDEBAR ==================== -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <a href="/" style="text-decoration:none; color:inherit; display:flex; align-items:center; gap:8px;">
+            <span>🏆</span> منصة المجد
+        </a>
+    </div>
+    <nav>
+        <a href="index.html"><span class="nav-icon">📊</span> لوحة التحكم</a>
+        <a href="sections.html" class="active"><span class="nav-icon">📂</span> الأقسام</a>
+        <a href="courses.html"><span class="nav-icon">📚</span> الدورات</a>
+        <a href="lessons.html"><span class="nav-icon">🎬</span> الدروس</a>
+        <a href="students.html"><span class="nav-icon">👥</span> الطلاب</a>
+        <a href="exams.html"><span class="nav-icon">📝</span> الاختبارات</a>
+    </nav>
+    <div class="sidebar-footer">
+        <button onclick="handleLogout()">🚪 تسجيل الخروج</button>
+    </div>
+</aside>
+
+<!-- ==================== MAIN ==================== -->
+<main class="main-content">
+    <div class="page-header">
+        <h1>📂 إدارة الأقسام</h1>
+        <div class="admin-info" id="adminInfo"></div>
+    </div>
+
+    <div class="page-body">
+        <div class="card">
+            <div class="card-header">
+                <h3>📂 قائمة الأقسام</h3>
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    ➕ إضافة قسم جديد
+                </button>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الأيقونة</th>
+                            <th>اسم القسم</th>
+                            <th>عدد الدورات</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sectionsBody">
+                        <tr>
+                            <td colspan="5" class="no-data">
+                                <div class="spinner" style="margin:auto"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ==================== MODAL: ADD / EDIT ==================== -->
+<div class="modal-overlay" id="sectionModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h2 id="sectionModalTitle">➕ إضافة قسم جديد</h2>
+            <button class="modal-close" onclick="hideModal('sectionModal')">✕</button>
+        </div>
+        <form id="sectionForm" onsubmit="submitSection(event)">
+            <input type="hidden" id="sectionId">
+
+            <div class="form-group">
+                <label>اسم القسم *</label>
+                <input class="form-control" id="sectionTitle" placeholder="مثال: الرياضيات" required>
+            </div>
+            <div class="form-group">
+                <label>الأيقونة (emoji) *</label>
+                <input class="form-control" id="sectionIcon" placeholder="مثال: 📐" required maxlength="10">
+                <small style="color:var(--text-secondary); font-size:0.8rem; margin-top:4px;">
+                    يمكنك نسخ أي emoji ولصقه هنا
+                </small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="sectionSubmitBtn">
+                    💾 حفظ القسم
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="hideModal('sectionModal')">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="admin.js"></script>
+<script>
+'use strict';
+
+/* ---- تحميل الأقسام ---- */
+async function loadSections() {
+    const tbody = document.getElementById('sectionsBody');
+    try {
+        const sections = await apiRequest('/api/sections');
+        if (!sections || sections.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="no-data">لا توجد أقسام بعد. أضف أول قسم!</td></tr>';
+            return;
+        }
+        tbody.innerHTML = sections.map((s, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td style="font-size:1.6rem; text-align:center;">${escapeHtml(s.icon || '📂')}</td>
+                <td><strong>${escapeHtml(s.title)}</strong></td>
+                <td>
+                    <span class="badge badge-student">${s.courses_count ?? 0} دورة</span>
+                </td>
+                <td>
+                    <div class="actions">
+                        <button class="btn btn-secondary btn-sm"
+                            onclick="openEditModal(${s.id}, '${escapeHtml(s.title).replace(/'/g,"\\'")}', '${escapeHtml(s.icon || '').replace(/'/g,"\\'")}')">
+                            ✏️ تعديل
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteSection(${s.id}, '${escapeHtml(s.title).replace(/'/g,"\\'")}')">
+                            🗑️ حذف
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="5" class="no-data">❌ ${escapeHtml(err.message)}</td></tr>`;
+        showAlert(err.message, 'error');
+    }
+}
+
+/* ---- فتح مودال الإضافة ---- */
+function openAddModal() {
+    document.getElementById('sectionModalTitle').textContent = '➕ إضافة قسم جديد';
+    document.getElementById('sectionSubmitBtn').textContent  = '💾 إضافة القسم';
+    document.getElementById('sectionId').value    = '';
+    document.getElementById('sectionTitle').value = '';
+    document.getElementById('sectionIcon').value  = '';
+    showModal('sectionModal');
+}
+
+/* ---- فتح مودال التعديل ---- */
+function openEditModal(id, currentTitle, currentIcon) {
+    document.getElementById('sectionModalTitle').textContent = '✏️ تعديل القسم';
+    document.getElementById('sectionSubmitBtn').textContent  = '💾 حفظ التعديلات';
+    document.getElementById('sectionId').value    = id;
+    document.getElementById('sectionTitle').value = currentTitle;
+    document.getElementById('sectionIcon').value  = currentIcon;
+    showModal('sectionModal');
+}
+
+/* ---- إرسال النموذج (إضافة أو تعديل) ---- */
+async function submitSection(event) {
+    event.preventDefault();
+    const id    = document.getElementById('sectionId').value;
+    const title = document.getElementById('sectionTitle').value.trim();
+    const icon  = document.getElementById('sectionIcon').value.trim();
+
+    if (!title || !icon) {
+        showAlert('يرجى تعبئة جميع الحقول المطلوبة', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('sectionSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ جاري الحفظ...';
+
+    try {
+        const isEdit = !!id;
+        await apiRequest(isEdit ? `/api/sections/${id}` : '/api/sections', {
+            method: isEdit ? 'PUT' : 'POST',
+            body: JSON.stringify({ title, icon }),
+        });
+
+        showAlert(isEdit ? 'تم تعديل القسم بنجاح ✅' : 'تم إضافة القسم بنجاح ✅', 'success');
+        hideModal('sectionModal');
+        loadSections();
+    } catch (err) {
+        showAlert(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 حفظ القسم';
+    }
+}
+
+/* ---- حذف قسم ---- */
+async function deleteSection(id, title) {
+    if (!confirmDelete(`هل تريد حذف القسم "${title}"؟ سيتم حذف جميع دوراته أيضاً!`)) return;
+    try {
+        await apiRequest(`/api/sections/${id}`, { method: 'DELETE' });
+        showAlert('تم حذف القسم بنجاح', 'success');
+        loadSections();
+    } catch (err) {
+        showAlert(err.message, 'error');
+    }
+}
+
+/* ---- تهيئة ---- */
+document.addEventListener('DOMContentLoaded', () => {
+    loadSections();
+});
+</script>
+</body>
+</html>

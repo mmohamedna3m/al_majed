@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة المجد - اختبار</title>
+    <link rel="stylesheet" href="exam-style.css">
+</head>
+<body>
+
+    <!-- Header مع العداد -->
+    <header class="exam-header">
+        <div class="brand" onclick="window.location.href='/'" style="cursor:pointer; margin-left:15px; font-weight:bold; color:var(--gold); font-size:1.15rem;" title="العودة للصفحة الرئيسية">
+            <a href="/" style="text-decoration:none; color:inherit;">🏆 منصة المجد</a>
+        </div>
+        <div class="exam-title-wrap" id="examTitle">📝 الاختبار</div>
+        <div class="timer-box" id="timerBox">
+            ⏱️ <span id="timerDisplay">00:00</span>
+        </div>
+    </header>
+
+    <div class="exam-container">
+
+        <!-- مرحلة المقدمة -->
+        <div class="exam-intro" id="examIntro">
+            <div class="intro-card">
+                <div class="intro-icon">📝</div>
+                <h2 id="introTitle">جاري التحميل...</h2>
+
+                <div class="exam-info-grid">
+                    <div class="info-item">
+                        <span class="info-icon">⏱️</span>
+                        <span class="info-label">المدة</span>
+                        <span class="info-val" id="introDuration">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">📝</span>
+                        <span class="info-label">عدد الأسئلة</span>
+                        <span class="info-val" id="introQuestions">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">✅</span>
+                        <span class="info-label">نسبة النجاح</span>
+                        <span class="info-val" id="introPassScore">—</span>
+                    </div>
+                </div>
+
+                <div class="intro-warning">
+                    ⚠️ بمجرد بدء الاختبار، سيبدأ العداد ولن يمكن إيقافه. تأكد من جاهزيتك!
+                </div>
+
+                <button class="btn-start" id="startExamBtn">🚀 ابدأ الاختبار الآن</button>
+            </div>
+        </div>
+
+        <!-- مرحلة الأسئلة -->
+        <div class="exam-questions" id="examQuestions" style="display:none;">
+
+            <!-- شريط التقدم -->
+            <div class="progress-bar-wrap">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text">
+                    السؤال <span id="currentQ">1</span> من <span id="totalQ">10</span>
+                </div>
+            </div>
+
+            <!-- بطاقة السؤال -->
+            <div class="question-card" id="questionCard">
+                <div class="question-num" id="questionNum">السؤال 1</div>
+                <div class="question-text" id="questionText">...</div>
+                <div class="options-grid" id="optionsGrid">
+                    <!-- الخيارات تُملأ ديناميكياً -->
+                </div>
+            </div>
+
+            <!-- نقاط الأسئلة -->
+            <div class="questions-dots-wrap">
+                <div class="questions-dots" id="questionsDots"></div>
+            </div>
+
+            <!-- أزرار التنقل -->
+            <div class="nav-buttons">
+                <button class="btn-prev" id="prevBtn" onclick="prevQuestion()">← السابق</button>
+                <button class="btn-next" id="nextBtn" onclick="nextQuestion()">التالي →</button>
+            </div>
+
+            <button class="btn-submit" id="submitBtn" onclick="submitExam()" style="display:none;">
+                📤 تسليم الاختبار
+            </button>
+
+        </div>
+
+        <!-- مرحلة النتيجة -->
+        <div class="exam-result" id="examResult" style="display:none;">
+            <div class="result-card">
+                <div class="result-circle" id="resultCircle">
+                    <span class="result-percent" id="resultPercent">0%</span>
+                </div>
+                <h2 class="result-title" id="resultTitle">...</h2>
+                <div class="result-details">
+                    <div class="result-stat">
+                        <span class="result-stat-label">درجتك</span>
+                        <span class="result-stat-val gold" id="resultScore">—</span>
+                    </div>
+                    <div class="result-stat">
+                        <span class="result-stat-label">من إجمالي</span>
+                        <span class="result-stat-val" id="resultTotal">—</span>
+                    </div>
+                </div>
+                <div class="result-actions">
+                    <a href="dashboard.html" class="btn-gold-link">🏠 العودة للوحة التحكم</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="exam-script.js"></script>
+</body>
+</html>
